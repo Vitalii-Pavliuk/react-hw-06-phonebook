@@ -6,7 +6,7 @@ return (
     <ul className={style.contactList}>
         {contacts.map((contact) => (
             <li className={style.contactItem} key={contact.id}>
-                <span className="contactInfo">
+                <span  className={style.contactInfo}>
                     {contact.name}: {contact.number}
                 </span>
                 <button

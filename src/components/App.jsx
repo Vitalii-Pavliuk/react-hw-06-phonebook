@@ -1,94 +1,61 @@
-import React, { useState, useEffect } from "react"
-import { nanoid } from "nanoid"
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
 
-import style from "./App.module.css"
+import { addContact, deleteContact } from "../components/redux/contactsSlice";
+import { setFilter } from "../components/redux/filtersSlice";
 
-import ContactForm from "./ContactForm/ContactForm"
-import ContactList from "./ContactList/ContactList"
-import SearchContact from "./SearchContact/SearchContact"
+import ContactForm from "./ContactForm/ContactForm";
+import ContactList from "./ContactList/ContactList";
+import SearchContact from "./SearchContact/SearchContact";
+
+import style from "./App.module.css";
 
 function App() {
-  const [contacts, setContacts] = useState([
-    { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
-    { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
-    { id: "id-3", name: "Eden Clements", number: "645-17-79" },
-    { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
-  ])
-  const [name, setName] = useState("")
-  const [number, setNumber] = useState("")
-  const [filter, setFilter] = useState("")
+  const dispatch = useDispatch();
+  const contacts = useSelector((state) => state.contacts.items);
+  const filter = useSelector((state) => state.filters.filter);
 
-  useEffect(() => {
-    const storedContacts = localStorage.getItem("contacts")
-    if (storedContacts) {
-      setContacts(JSON.parse(storedContacts))
-    }
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem("contacts", JSON.stringify(contacts))
-  }, [contacts])
-
-  const handleInputChange = (event) => {
-    const { name, value } = event.target
-    if (name === "name") setName(value)
-    else if (name === "number") setNumber(value)
-  }
-
-  const addContact = () => {
-    if (name.trim() === "" || number.trim() === "") return
+  const handleAddContact = (name, number) => {
+    if (name === "" || number === "") return;
 
     const nameExists = contacts.some(
-      (contact) => contact.name.toLowerCase() === name.toLowerCase(),
-    )
+      (contact) => contact.name.trim().toLowerCase() === name.toLowerCase()
+    );
 
     if (nameExists) {
-      alert(`${name} is already in contacts.`)
-      return
+      alert(`${name} is already in contacts.`);
+      return;
     }
 
-    const newContact = {
-      id: nanoid(),
-      name,
-      number,
-    }
+    dispatch(addContact(name, number));
+  };
 
-    setContacts((prev) => [...prev, newContact])
-    setName("")
-    setNumber("")
-  }
+  const handleDeleteContact = (id) => {
+    dispatch(deleteContact(id));
+  };
 
-  const changeFilter = (event) => {
-    setFilter(event.target.value)
-  }
+  const handleFilterChange = (event) => {
+    dispatch(setFilter(event.target.value));
+  };
 
   const getVisibleContacts = () => {
-    const normalizedFilter = filter.toLowerCase()
+    const normalizedFilter = filter.toLowerCase();
     return contacts.filter((contact) =>
-      contact.name.toLowerCase().includes(normalizedFilter),
-    )
-  }
+      contact.name.toLowerCase().includes(normalizedFilter)
+    );
+  };
 
-  const deleteContact = (id) => {
-    setContacts((prev) => prev.filter((contact) => contact.id !== id))
-  }
-
-  const filteredContacts = getVisibleContacts()
+  const filteredContacts = getVisibleContacts();
 
   return (
     <div className={style.container}>
       <h1 className={style.title}>Phonebook</h1>
-      <ContactForm
-        name={name}
-        number={number}
-        onInputChange={handleInputChange}
-        onAddContact={addContact}
-      />
+      <ContactForm onAddContact={handleAddContact} />
       <h2 className={style.subtitle}>Contacts</h2>
-      <SearchContact value={filter} onFilterChange={changeFilter} />
-      <ContactList contacts={filteredContacts} onDelete={deleteContact} />
+      <SearchContact value={filter} onFilterChange={handleFilterChange} />
+      <ContactList contacts={filteredContacts} onDelete={handleDeleteContact} />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
